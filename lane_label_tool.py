@@ -976,6 +976,9 @@ class LaneLabelTool(QMainWindow):
         samples = []
         if os.path.isfile(file_path):
             f = open(file_path, "r")
+            if "sampled" in file_path:
+                QMessageBox.information(self, "File already sampled", "Can't sample a file twice!")
+                return
             if os.path.getsize(file_path) == 0:
                 QMessageBox.information(self, "File empty", "File is empty, please select another!")
                 return
