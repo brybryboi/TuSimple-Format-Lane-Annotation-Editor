@@ -19,8 +19,6 @@ from PyQt5.QtGui import QPixmap, QImage, QPainter, QColor, QPen, QKeySequence
 from PyQt5.QtCore import Qt, QPoint
 import logging
 
-print("here")
-
 LANE_COLORS = [
     QColor(255, 0, 0), QColor(0, 255, 0), QColor(0, 0, 255),
     QColor(255, 0, 255), QColor(255, 255, 0), QColor(0, 255, 255)
@@ -72,7 +70,7 @@ class ConfigDialog(QDialog):
         
         # 最大车道线数配置
         self.max_lanes = QLineEdit(self)
-        self.max_lanes.setText(str(config.get("max_lanes", 6)))
+        self.max_lanes.setText(str(config.get("max_lanes", 4)))
         self.max_lanes.textChanged.connect(self.on_max_lanes_changed)
         layout.addRow(self.lang_manager.get_text("config_max_lanes"), self.max_lanes)
         
@@ -80,7 +78,7 @@ class ConfigDialog(QDialog):
         # so that function has more error catching capabilities (if input is str instead of int, if is blank, etc)
         # New: Sample Interval Feature
         self.sample_interval = QLineEdit(self)
-        self.sample_interval.setText(str(config.get("sample_interval", 2)))
+        self.sample_interval.setText(str(config.get("sample_interval", 3)))
         self.sample_interval.textChanged.connect(self.on_sample_interval_changed)
         layout.addRow(self.lang_manager.get_text("config_sample_interval"), self.sample_interval)
 
@@ -125,7 +123,7 @@ class ConfigDialog(QDialog):
             errors.append(sample_interval_result)
         
         if len(errors) > 0:
-            QMessageBox.warning(self, "Settings Errors", "\n".join(errors))
+            QMessageBox.warning(self, self.lang_manager.get_text("dialog_warning"), "\n".join(errors))
         else:
             self.accept()
 
@@ -157,19 +155,19 @@ class ConfigDialog(QDialog):
                 self.parent.update_canvas()
                 return f"提示, 已将车道线数量限制为{max_lanes}条"
         except ValueError:
-            return "Invalid value for max lanes!"
+            return self.lang_manager.get_text("msg_invalid_max_lanes")
 
     def on_sample_interval_changed(self):
         text = self.sample_interval.text()
         try:
             sample_interval = int(text)
             if sample_interval < 2 or sample_interval > 50:
-                return "Invalid sample interval; value should be between 2 and 50"
+                return self.lang_manager.get_text("msg_invalid_sample_interval_range")
             else:
                 self.parent.config["sample_interval"] = sample_interval
                 self.parent.save_config()
         except ValueError:
-            return "Invalid sample interval!"
+            return self.lang_manager.get_text("msg_invalid_sample_interval_value")
             # Change the checks to be on button press instead of change
             # QMessageBox.information(self, "Invalid Sample Interval", "Please enter a valid integer between 2 and 50")
 
@@ -201,12 +199,12 @@ class ConfigDialog(QDialog):
         try:
             max_lanes = int(self.max_lanes.text())
         except ValueError:
-            max_lanes = 6
+            max_lanes = 4
         
         try:
             sample_interval = int(self.sample_interval.text())
         except ValueError:
-            sample_interval = 2
+            sample_interval = 3
             
         return {
             "image_root": self.image_root.text(),
@@ -469,8 +467,29 @@ class LaneLabelTool(QMainWindow):
         redo_shortcut.activated.connect(self.redo)
         save_copy_shortcut = QShortcut(QKeySequence("Ctrl+S"), self)
         save_copy_shortcut.activated.connect(self.save_copy2)
+        change_lane_up_shortcut = QShortcut(QKeySequence("Ctrl+Up"), self)
+        change_lane_up_shortcut.activated.connect(self.change_lane_up)
+        change_lane_down_shortcut = QShortcut(QKeySequence("Ctrl+X"), self)
+        change_lane_down_shortcut.activated.connect(self.change_lane_down)
+        next_image_shortcut = QShortcut(QKeySequence("Ctrl+Right"), self)
+        next_image_shortcut.activated.connect(self.next_image)
+        prev_image_shortcut = QShortcut(QKeySequence("Ctrl+Left"), self)
+        prev_image_shortcut.activated.connect(self.prev_image)
         print("file_label: " + self.json_file_label.text())
 
+    def change_lane_up(self):
+        new_lane = self.current_lane - 1
+        if new_lane < 0:
+            new_lane = len(self.lane_list) - 1
+        self.select_lane(new_lane)
+        self.update_lane_list()
+    
+    def change_lane_down(self):
+        new_lane = self.current_lane + 1
+        if new_lane > len(self.lane_list) - 1:
+            new_lane = 0
+        self.select_lane(new_lane)
+        self.update_lane_list()
 
     def load_cache(self):
         """加载缓存信息，包括上次标注的文件路径、文件名和图片索引"""
