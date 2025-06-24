@@ -143,3 +143,19 @@ Label lines up until the tracks
 ### Case: Poor visibility + super narrow shoulder
 ![alt text](<summary-images/Screenshot 2025-06-23 112137.png>)
 Use case above for poor visibility. If the shoulder is very narrow like in the example image, don't label it, as it would be unreasonable to call that a lane.
+
+### Case: Fragmented lanes
+![alt text](<summary-images/Screenshot 2025-06-24 101028.png>)
+Label each lane all the way, even inferring their projected path
+
+### Case: Car directly in front, partial lane blockage
+![alt text](<summary-images/Screenshot 2025-06-24 101840.png>)
+Label each lane all the way, infer their projected path, only if the end of the lines are still visible
+
+### Case: Car directly in front, partial lane blockage (end(s) covered)
+![alt text](<summary-images/Screenshot 2025-06-24 102440.png>)
+Label each line where it is visible, don't infer the line
+
+### Case: Road in/outlet on opposite side of road
+![alt text](<summary-images/Screenshot 2025-06-24 113449.png>)
+Mark the line across the in/outlet like it was a straight line
